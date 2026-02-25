@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>UBL Production Recruitment</title>
+
+<style>
+
+body{
+font-family:Segoe UI;
+background:#1b1e26;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+.container{
+background:#371d93;
+padding:30px;
+border-radius:12px;
+width:420px;
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+
+h2{
+text-align:center;
+margin-bottom:20px;
+}
+
+input, textarea{
+width:100%;
+padding:12px;
+margin:8px 0;
+border-radius:8px;
+border:none;
+background:#1f2937;
+color:white;
+}
+
+/* FIX checkbox alignment */
+#toolsGroup label{
+display:flex;
+align-items:center;
+gap:8px;
+margin:6px 0;
+cursor:pointer;
+}
+
+#toolsGroup input[type="checkbox"]{
+width:auto;
+margin:0;
+padding:0;
+accent-color:#f17300;
+}
+
+#toolsGroup label:hover{
+background:#374151;
+padding:4px 6px;
+border-radius:6px;
+}
+
+button{
+padding:12px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+margin-top:10px;
+width:100%;
+font-weight:bold;
+
+display:flex;
+justify-content:center;
+align-items:center;
+gap:8px;
+}
+
+.next{background:#f17300;color:white;}
+.back{background:#374151;color:white;}
+.submit{background:#16a34a;color:white;}
+
+.step{
+display:none;
+}
+
+.step.active{
+display:block;
+}
+
+.progress{
+text-align:center;
+margin-bottom:15px;
+color:#9ca3af;
+font-size:14px;
+}
+
+.loading{
+opacity:0.7;
+pointer-events:none;
+}
+
+.spinner{
+border:2px solid rgba(255,255,255,0.3);
+border-top:2px solid white;
+border-radius:50%;
+width:16px;
+height:16px;
+animation:spin 1s linear infinite;
+display:inline-block;
+vertical-align:middle;
+margin-right:8px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>UBL Production<br>Talented Crew Registration</h2>
+
+<div class="progress" id="progress">Step 1 of 3</div>
+
+<!-- STEP 1 -->
+<div class="step active">
+<input id="fullName" placeholder="Full Name" required>
+<input id="phone" placeholder="Phone Number" required>
+<input id="yearEntry" placeholder="Year of Entry">
+<input id="organization" placeholder="Your Organization">
+
+<button class="next" onclick="nextStep()">Next</button>
+</div>
+
+<!-- STEP 2 -->
+<div class="step">
+
+<label>Your Tools</label>
+
+<div id="toolsGroup" style="max-height:200px;overflow:auto;background:#1f2937;padding:10px;border-radius:8px;">
+
+<label><input type="checkbox" value="Adobe Photoshop"> Adobe Photoshop</label><br>
+<label><input type="checkbox" value="Adobe Illustrator"> Adobe Illustrator</label><br>
+<label><input type="checkbox" value="Adobe InDesign"> Adobe InDesign</label><br>
+<label><input type="checkbox" value="Adobe Premiere Pro"> Adobe Premiere Pro</label><br>
+<label><input type="checkbox" value="Adobe Lightroom"> Adobe Lightroom</label><br>
+<label><input type="checkbox" value="Adobe Firefly"> Adobe Firefly</label><br>
+<label><input type="checkbox" value="Adobe Creative Cloud"> Adobe Creative Cloud</label><br>
+<label><input type="checkbox" value="Canva"> Canva</label><br>
+<label><input type="checkbox" value="Capcut"> Capcut</label><br>
+<label><input type="checkbox" value="Davinci Resolve"> Davinci Resolve</label><br>
+<label><input type="checkbox" value="Filmora"> Filmora</label><br>
+<label><input type="checkbox" value="Vmix"> Vmix</label><br>
+<label><input type="checkbox" value="OBS Studio"> OBS Studio</label><br>
+<label><input type="checkbox" value="Social Stream Ninja"> Social Stream Ninja</label><br>
+<label>
+<input type="checkbox" value="Another Tool" id="anotherToolCheck" onchange="toggleAnotherTool()">
+Another Tool
+</label>
+
+<input 
+type="text" 
+id="anotherToolInput" 
+placeholder="Write your other tool here..."
+style="display:none;margin-top:8px;">
+
+</div>
+
+<br>
+
+<label>Desired Position</label>
+
+<select id="position">
+<option value="">-- Select Position --</option>
+<option>Photography</option>
+<option>Videography</option>
+<option>Graphic Design</option>
+<option>Streaming Operation</option>
+</select>
+
+<button class="back" onclick="prevStep()">Back</button>
+<button class="next" onclick="nextStep()">Next</button>
+
+</div>
+
+<!-- STEP 3 -->
+<div class="step">
+
+<label>Upload CV</label>
+<input type="file" id="cv" required>
+
+<label>Upload Portfolio</label>
+<input type="file" id="portfolio" required>
+
+<button class="back" onclick="prevStep()">Back</button>
+<button class="submit" id="submitBtn" onclick="submitForm()">
+Submit Application
+</button>
+
+</div>
+
+<div id="successPage" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#111827;
+color:white;
+justify-content:center;
+align-items:center;
+font-size:22px;
+flex-direction:column;
+">
+
+✅ Application Submitted Successfully!
+<br><br>
+Thank you for joining UBL Production.
+
+</div>
+
+<script>
+
+const SCRIPT_URL="https://script.google.com/a/macros/ubl.ac.id/s/AKfycbz7BwsFHJUhv3EGW35pyIm3qwG3bc9OtNWyhl4N9HROQPPUndZKxFkfjh6sPzj9C7cy/exec";
+
+let currentStep=0;
+const steps=document.querySelectorAll(".step");
+
+function showStep(){
+steps.forEach((s,i)=>{
+s.classList.toggle("active",i===currentStep);
+});
+document.getElementById("progress").innerText=
+`Step ${currentStep+1} of ${steps.length}`;
+}
+
+function nextStep(){
+
+// VALIDASI STEP 1
+if(currentStep === 0){
+if(!fullName.value || !phone.value){
+alert("Please complete required personal information.");
+return;
+}
+}
+
+// VALIDASI STEP 2
+if(currentStep === 1){
+
+const checkedTools =
+document.querySelectorAll('#toolsGroup input:checked').length;
+
+if(checkedTools === 0){
+alert("Please select at least one tool.");
+return;
+}
+
+if(!position.value){
+alert("Please select desired position.");
+return;
+}
+}
+
+currentStep++;
+showStep();
+}
+
+function prevStep(){
+currentStep--;
+showStep();
+}
+
+async function toBase64(file){
+return new Promise((resolve)=>{
+const reader=new FileReader();
+reader.readAsDataURL(file);
+reader.onload=()=>resolve(reader.result.split(',')[1]);
+});
+}
+
+async function submitForm(){
+const btn = document.getElementById("submitBtn");
+btn.innerHTML = '<div class="spinner"></div> Submitting...';
+btn.classList.add("loading");
+
+// ambil tools yang dipilih
+let selectedTools = Array.from(
+document.querySelectorAll('#toolsGroup input:checked')
+).map(cb => cb.value);
+
+// tambah isi Another Tool jika ada
+const anotherToolValue = document.getElementById("anotherToolInput").value;
+
+if(selectedTools.includes("Another Tool") && anotherToolValue){
+selectedTools = selectedTools.filter(t => t !== "Another Tool");
+selectedTools.push(anotherToolValue);
+}
+
+selectedTools = selectedTools.join(", ");
+
+const cvFile=document.getElementById("cv").files[0];
+const portfolioFile=document.getElementById("portfolio").files[0];
+
+if(!cvFile || !portfolioFile){
+alert("Please upload required files");
+
+btn.innerHTML = "Submit Application";
+btn.classList.remove("loading");
+
+return;
+}
+
+const data={
+fullName:fullName.value,
+phone:phone.value,
+yearEntry:yearEntry.value,
+organization:organization.value,
+tools:selectedTools,
+position:position.value,
+cv:{
+name:cvFile.name,
+type:cvFile.type,
+data:await toBase64(cvFile)
+},
+portfolio:{
+name:portfolioFile.name,
+type:portfolioFile.type,
+data:await toBase64(portfolioFile)
+}
+};
+
+await new Promise(r => setTimeout(r, 1200));
+
+try {
+
+await fetch(SCRIPT_URL,{
+method:"POST",
+body:JSON.stringify(data)
+});
+
+// tampilkan success
+document.querySelector(".container").style.display="none";
+document.getElementById("successPage").style.display="flex";
+
+} catch(err){
+
+alert("Submission failed. Check internet or script URL.");
+
+btn.innerHTML = "Submit Application";
+btn.classList.remove("loading");
+
+console.error(err);
+}
+
+document.querySelector(".container").style.display="none";
+document.getElementById("successPage").style.display="flex";
+}
+
+function toggleAnotherTool(){
+
+const checkbox = document.getElementById("anotherToolCheck");
+const input = document.getElementById("anotherToolInput");
+
+if(checkbox.checked){
+    input.style.display = "block";
+}else{
+    input.style.display = "none";
+    input.value = "";
+}
+
+}
+
+</script>
+
+</body>
+</html>
