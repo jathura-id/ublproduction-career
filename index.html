@@ -400,8 +400,9 @@ button:active:not(:disabled) {
 
 <script>
 
-// FIX: SCRIPT_URL dengan format yang benar
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7BwsFHJUhv3EGW35pyIm3qwG3bc9OtNWyhl4N9HROQPPUndZKxFkfjh6sPzj9C7cy/exec";
+// Request dikirim ke proxy Netlify dulu, baru diteruskan ke Google Apps Script
+// Cara ini menghindari blokir firewall WiFi kampus/kantor
+const SCRIPT_URL = "/.netlify/functions/submit";
 
 let currentStep = 0;
 const steps = document.querySelectorAll(".step");
@@ -538,16 +539,25 @@ async function submitForm() {
   };
 
   try {
-    await fetch(SCRIPT_URL, {
+    // Request ke proxy Netlify (/.netlify/functions/submit)
+    // Proxy yang akan meneruskan ke Google Apps Script
+    const response = await fetch(SCRIPT_URL, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     });
 
-    // FIX: Success page hanya muncul di sini (di dalam try, kalau berhasil)
-    document.getElementById("mainContainer").style.display = "none";
-    document.getElementById("successPage").style.display = "flex";
+    const result = await response.json();
+
+    if (result.status === "success") {
+      document.getElementById("mainContainer").style.display = "none";
+      document.getElementById("successPage").style.display = "flex";
+    } else {
+      throw new Error(result.message || "Unknown error from server");
+    }
 
   } catch (err) {
+    // Kalau masih error, kemungkinan masalah jaringan bukan CORS
     alert("Submission failed. Please check your internet connection and try again.");
     btn.innerHTML = "Submit Application";
     btn.classList.remove("loading");
@@ -559,4 +569,3 @@ async function submitForm() {
 
 </body>
 </html>
-
